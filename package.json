@@ -1,0 +1,24 @@
+{
+  "name": "create-kyrix-app",
+  "version": "1.0.2",
+  "description": "A CLI tool to create a Kyrix app.",
+  "main": "index.js",
+  "bin": {
+    "create-kyrix-app": "./index.js"
+  },
+  "scripts": {
+    "start": "node index.js"
+  },
+  "keywords": [
+    "cli",
+    "kyrix",
+    "create-kyrix-app",
+    "starter",
+    "boilerplate",
+    "npx"
+  ],
+  "author": "evolvedev-inc",
+  "dependencies": {
+    "simple-git": "^3.26.0"
+  }
+}
