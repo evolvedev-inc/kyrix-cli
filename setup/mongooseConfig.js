@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-module.exports.setupMongoose = (targetPath) => {
+module.exports.setupMongoose = (targetPath, chalk) => {
   const mongoosePath = path.join(targetPath, 'src', 'utils');
 
   if (!fs.existsSync(mongoosePath)) {
@@ -27,5 +27,5 @@ module.exports.setupMongoose = (targetPath) => {
     export default connectDB;
   `);
 
-  console.log('MongoDB+Mongoose setup completed.');
+  console.log(chalk.green('MongoDB+Mongoose setup completed.'));
 };

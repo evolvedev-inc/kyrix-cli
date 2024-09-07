@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-module.exports.setupPrisma = (targetPath) => {
+module.exports.setupPrisma = (targetPath, chalk) => {
   const prismaPath = path.join(targetPath, 'prisma');
   const utilsPath = path.join(targetPath, 'src', 'utils');
 
@@ -32,5 +32,5 @@ module.exports.setupPrisma = (targetPath) => {
     export default prisma;
   `);
 
-  console.log('PostgreSQL+Prisma setup completed.');
+  console.log(chalk.green('PostgreSQL+Prisma setup completed.'));
 };

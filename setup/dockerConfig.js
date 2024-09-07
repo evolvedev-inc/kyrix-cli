@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-module.exports.setupDocker = (targetPath, dbChoice) => {
+module.exports.setupDocker = (targetPath, dbChoice, chalk) => {
   const dockerPath = path.join(targetPath, 'src', 'docker');
 
   if (!fs.existsSync(dockerPath)) {
@@ -55,5 +55,5 @@ module.exports.setupDocker = (targetPath, dbChoice) => {
 
   fs.writeFileSync(path.join(dockerPath, 'docker-compose.yml'), dockerComposeYml);
 
-  console.log('Docker setup completed.');
+  console.log(chalk.green('Docker setup completed.'));
 };
