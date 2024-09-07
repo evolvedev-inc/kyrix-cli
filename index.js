@@ -4,7 +4,11 @@ const simpleGit = require('simple-git');
 const path = require('path');
 const fs = require('fs');
 const readline = require('readline');
-const { execSync } = require('child_process');
+
+// Import configuration files
+const { setupPrisma } = require('./setup/prismaConfig');
+const { setupMongoose } = require('./setup/mongooseConfig');
+const { setupDocker } = require('./setup/dockerConfig');
 
 // Dynamically import chalk (ESM)
 let chalk;
@@ -62,69 +66,14 @@ let chalk;
 
       if (dbChoice === '1') {
         // PostgreSQL+Prisma setup
-        const prismaPath = path.join(targetPath, 'prisma');
-        const utilsPath = path.join(targetPath, 'src', 'utils');
-
-        if (!fs.existsSync(prismaPath)) {
-          fs.mkdirSync(prismaPath);
-        }
-
-        if (!fs.existsSync(utilsPath)) {
-          fs.mkdirSync(utilsPath, { recursive: true });
-        }
-
-        fs.writeFileSync(path.join(prismaPath, 'migration.prisma'), `
-          datasource db {
-            provider = "postgresql"
-            url      = env("DATABASE_URL")
-          }
-
-          generator client {
-            provider = "prisma-client-js"
-          }
-        `);
-
-        fs.writeFileSync(path.join(utilsPath, 'connect.db.ts'), `
-          import { PrismaClient } from '@prisma/client';
-
-          const prisma = new PrismaClient();
-
-          export default prisma;
-        `);
-
-        console.log(chalk.green('PostgreSQL+Prisma setup completed.'));
+        setupPrisma(targetPath);
         dependencies = {
           "prisma": "^4.0.0",
           "@prisma/client": "^4.0.0"
         };
       } else if (dbChoice === '2') {
         // MongoDB+Mongoose setup
-        const mongoosePath = path.join(targetPath, 'src', 'utils');
-
-        if (!fs.existsSync(mongoosePath)) {
-          fs.mkdirSync(mongoosePath, { recursive: true });
-        }
-
-        fs.writeFileSync(path.join(mongoosePath, 'connect.db.ts'), `
-          import mongoose from 'mongoose';
-
-          const connectDB = async () => {
-            try {
-              const conn = await mongoose.connect(process.env.MONGO_URI || '', {
-                useNewUrlParser: true,
-                useUnifiedTopology: true
-              });
-              console.log('MongoDB connected:', conn.connection.host);
-            } catch (error) {
-              console.error('MongoDB connection error:', error);
-              process.exit(1);
-            }
-          };
-
-          export default connectDB;
-        `);
-
-        console.log(chalk.green('MongoDB+Mongoose setup completed.'));
+        setupMongoose(targetPath);
         dependencies = {
           "mongoose": "^7.0.0"
         };
@@ -132,6 +81,16 @@ let chalk;
         console.log(chalk.red('Invalid choice.'));
         rl.close();
         return;
+      }
+
+      // Prompt user for Docker usage
+      const useDocker = await prompt('Do you want to use Docker? (Y/N) ');
+
+      if (useDocker.toLowerCase() === 'y') {
+        // Docker setup
+        setupDocker(targetPath, dbChoice);
+      } else {
+        console.log(chalk.yellow('Skipping Docker setup.'));
       }
 
       // Update dependencies in package.json
