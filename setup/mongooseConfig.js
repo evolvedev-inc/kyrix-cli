@@ -37,7 +37,7 @@ module.exports.setupMongoose = (targetPath, chalk) => {
     import { appRouter } from './trpc/root';
     import { createTRPCContext } from './trpc/trpc';
     import { middlewareFactory } from './middlewares';
-    import connectDB from './server/connect.db';
+    import connectDB from './connect.db';
 
     const root = process.cwd();
     const isProduction = env.NODE_ENV === 'production';
