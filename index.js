@@ -54,6 +54,13 @@ let chalk;
 
   try {
     await simpleGit().clone(repoUrl, targetPath);
+
+    // Remove the .git folder if it exists
+    const gitFolderPath = path.join(targetPath, '.git');
+    if (fs.existsSync(gitFolderPath)) {
+      fs.rmSync(gitFolderPath, { recursive: true });
+    }
+
     console.log(chalk.green('Kyrix app created successfully!'));
 
     // Prompt user for database connection
@@ -76,8 +83,8 @@ let chalk;
         // PostgreSQL+Prisma setup
         setupPrisma(targetPath, chalk);
         dependencies = {
-          "prisma": "^4.0.0",
-          "@prisma/client": "^4.0.0"
+          "prisma": "^5.19.1",
+          "@prisma/client": "^5.19.1"
         };
       } else if (dbChoice === '2') {
         // MongoDB+Mongoose setup
