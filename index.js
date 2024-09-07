@@ -3,7 +3,7 @@
 const simpleGit = require('simple-git');
 const path = require('path');
 const fs = require('fs');
-const readline = require('readline');
+const { confirm, select, text } = require('@clack/prompts');
 
 // Dynamically import chalk (ESM)
 let chalk;
@@ -15,19 +15,8 @@ let chalk;
   const { setupMongoose } = require('./setup/mongooseConfig');
   const { setupDocker } = require('./setup/dockerConfig');
 
-  // Create readline interface for user input
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout
-  });
-
   // Define the Kyrix repo URL
   const repoUrl = 'https://github.com/evolvedev-inc/kyrix.git';
-
-  // Define a function to prompt the user for input with color
-  const prompt = (question, color) => new Promise((resolve) => {
-    rl.question(chalk[color](question), resolve);
-  });
 
   // Target folder for the project
   const projectName = process.argv[2] || 'kyrix-app';
@@ -54,7 +43,7 @@ let chalk;
 
   try {
     await simpleGit().clone(repoUrl, targetPath);
-
+    
     // Remove the .git folder if it exists
     const gitFolderPath = path.join(targetPath, '.git');
     if (fs.existsSync(gitFolderPath)) {
@@ -64,18 +53,20 @@ let chalk;
     console.log(chalk.green('Kyrix app created successfully!'));
 
     // Prompt user for database connection
-    const connectDb = await prompt(chalk.cyan('Do you want to connect the Kyrix app with a database? (Y/N) '), 'cyan');
+    const connectDb = await confirm({
+      message: chalk.cyan('Do you want to connect the Kyrix app with a database?'),
+    });
 
-    if (connectDb.toLowerCase() === 'y') {
-       const dbChoice = await prompt(
-        chalk.cyan(
-          'Choose your database connection:\n' +
-          `${chalk.bold.magenta('1. PostgreSQL+Prisma')}\n` +
-          `${chalk.bold.magenta('2. MongoDB+Mongoose')}\n` +
-          'Enter choice (1 or 2): '
+    if (connectDb) {
+      const dbChoice = await select({
+        message: chalk.cyan(
+          'Choose your database connection:'
         ),
-        'cyan'
-      );
+        options: [
+          { label: chalk.bold.magenta('1. PostgreSQL+Prisma'), value: '1' },
+          { label: chalk.bold.magenta('2. MongoDB+Mongoose'), value: '2' }
+        ],
+      });
 
       let dependencies;
 
@@ -83,8 +74,8 @@ let chalk;
         // PostgreSQL+Prisma setup
         setupPrisma(targetPath, chalk);
         dependencies = {
-          "prisma": "^5.19.1",
-          "@prisma/client": "^5.19.1"
+          "prisma": "^4.0.0",
+          "@prisma/client": "^4.0.0"
         };
       } else if (dbChoice === '2') {
         // MongoDB+Mongoose setup
@@ -94,14 +85,15 @@ let chalk;
         };
       } else {
         console.log(chalk.red('Invalid choice.'));
-        rl.close();
         return;
       }
 
       // Prompt user for Docker usage
-      const useDocker = await prompt(chalk.cyan('Do you want to use Docker? (Y/N) '), 'cyan');
+      const useDocker = await confirm({
+        message: chalk.cyan('Do you want to use Docker?'),
+      });
 
-      if (useDocker.toLowerCase() === 'y') {
+      if (useDocker) {
         // Docker setup
         setupDocker(targetPath, dbChoice, chalk);
       } else {
@@ -120,8 +112,6 @@ let chalk;
 
       fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
 
-      console.log(chalk.blue('Updated package.json with new dependencies.'));
-      
       // Conditional log based on target path
       if (projectName === '.' || projectName === './') {
         console.log(chalk.yellow('Please run `npm install` to install the new dependencies.'));
@@ -131,10 +121,7 @@ let chalk;
     } else {
       console.log(chalk.yellow('Skipping database connection setup.'));
     }
-
-    rl.close();
   } catch (err) {
     console.error(chalk.red('Failed to create Kyrix app: '), err);
-    rl.close();
   }
 })();
