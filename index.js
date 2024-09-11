@@ -1,25 +1,28 @@
 #!/usr/bin/env node
 
-const simpleGit = require('simple-git');
-const path = require('path');
-const fs = require('fs');
-const { confirm, select, text } = require('@clack/prompts');
+import simpleGit from 'simple-git';
+import path from 'path';
+import fs from 'fs';
+import { confirm, select, text } from '@clack/prompts';
+import ora from 'ora'; // Import ora for spinner
+import chalk from 'chalk'; // Dynamically import chalk (ESM)
 
-// Dynamically import chalk (ESM)
-let chalk;
+// Import configuration files
+import { setupPrisma } from './setup/prismaConfig.js';
+import { setupDrizzle } from './setup/drizzleConfig.js';
+import { setupMongoose } from './setup/mongooseConfig.js';
+import { setupDocker } from './setup/dockerConfig.js';
+import { setupDependencies } from './setup/dependencies/config.js';
+
 (async () => {
-  chalk = (await import('chalk')).default;
-
-  // Import configuration files
-  const { setupPrisma } = require('./setup/prismaConfig');
-  const { setupMongoose } = require('./setup/mongooseConfig');
-  const { setupDocker } = require('./setup/dockerConfig');
-
   // Define the Kyrix repo URL
   const repoUrl = 'https://github.com/evolvedev-inc/kyrix.git';
 
-  // Target folder for the project
-  const projectName = process.argv[2] || 'kyrix-app';
+  // Prompt user for project directory
+  const projectName = await text({
+    message: chalk.cyan('What will be your project directory? (default: kyrix-app)'),
+    initialValue: 'kyrix-app',
+  });
 
   // Determine the target directory
   let targetPath;
@@ -38,90 +41,104 @@ let chalk;
     }
   }
 
-  // Clone the repo
-  console.log(chalk.blue(`Creating the Kyrix app in ${chalk.green(targetPath)}...`));
+  // Prompt if the user wants to connect a database
+  const connectDb = await confirm({
+    message: chalk.cyan('Do you want to connect the Kyrix app with a database?'),
+  });
+
+  let dbChoice, ormChoice;
+
+  if (connectDb) {
+    // Ask for database selection
+    dbChoice = await select({
+      message: chalk.cyan('Choose your database connection:'),
+      options: [
+        { label: chalk.bold.magenta('1. PostgreSQL'), value: 'postgresql' },
+        { label: chalk.bold.magenta('2. MySQL'), value: 'mysql' },
+        { label: chalk.bold.magenta('3. MongoDB'), value: 'mongodb' },
+      ],
+    });
+
+    // For PostgreSQL and MySQL, ask if the user wants an ORM
+    if (dbChoice === 'postgresql' || dbChoice === 'mysql') {
+      const useOrm = await confirm({
+        message: chalk.cyan('Do you want to use an ORM?'),
+      });
+
+      if (useOrm) {
+        ormChoice = await select({
+          message: chalk.cyan(`Choose an ORM for ${dbChoice}:`),
+          options: [
+            { label: chalk.bold.magenta('1. Prisma'), value: 'prisma' },
+            { label: chalk.bold.magenta('2. Drizzle'), value: 'drizzle' },
+          ],
+        });
+      }
+    }
+  }
+
+  // Ask if the user wants to use Docker
+  const useDocker = await confirm({
+    message: chalk.cyan('Do you want to use Docker?'),
+  });
+
+  // Set up spinner for cloning
+  const spinner = ora({
+    text: projectName === '.' || projectName === './'
+      ? 'Creating the Kyrix app in current directory...'
+      : `Creating the Kyrix app in ${chalk.green(projectName)}...`,
+    color: 'cyan',
+  }).start();
 
   try {
+    // Perform the Git clone operation
     await simpleGit().clone(repoUrl, targetPath);
-    
+
     // Remove the .git folder if it exists
     const gitFolderPath = path.join(targetPath, '.git');
     if (fs.existsSync(gitFolderPath)) {
       fs.rmSync(gitFolderPath, { recursive: true });
     }
 
-    console.log(chalk.green('Kyrix app created successfully!'));
+    spinner.succeed(`Kyrix app created successfully ${projectName === '.' || projectName === './' ? 'in current directory!' : `in ${chalk.green(projectName)}!`}`);
 
-    // Prompt user for database connection
-    const connectDb = await confirm({
-      message: chalk.cyan('Do you want to connect the Kyrix app with a database?'),
-    });
-
+    // Now set up the database connection based on user config
     if (connectDb) {
-      const dbChoice = await select({
-        message: chalk.cyan(
-          'Choose your database connection:'
-        ),
-        options: [
-          { label: chalk.bold.magenta('1. PostgreSQL+Prisma'), value: '1' },
-          { label: chalk.bold.magenta('2. MongoDB+Mongoose'), value: '2' }
-        ],
-      });
-
-      let dependencies;
-
-      if (dbChoice === '1') {
-        // PostgreSQL+Prisma setup
-        setupPrisma(targetPath, chalk);
-        dependencies = {
-          "prisma": "^4.0.0",
-          "@prisma/client": "^4.0.0"
-        };
-      } else if (dbChoice === '2') {
-        // MongoDB+Mongoose setup
+      if (dbChoice === 'postgresql') {
+        if (ormChoice === 'prisma') {
+          setupPrisma(targetPath, chalk, dbChoice);
+        } else if (ormChoice === 'drizzle') {
+          setupDrizzle(targetPath, chalk, dbChoice);
+        }
+      } else if (dbChoice === 'mysql') {
+        if (ormChoice === 'prisma') {
+          setupPrisma(targetPath, chalk, dbChoice);
+        } else if (ormChoice === 'drizzle') {
+          setupDrizzle(targetPath, chalk, dbChoice);
+        }
+      } else if (dbChoice === 'mongodb') {
         setupMongoose(targetPath, chalk);
-        dependencies = {
-          "mongoose": "^7.0.0"
-        };
-      } else {
-        console.log(chalk.red('Invalid choice.'));
-        return;
       }
 
-      // Prompt user for Docker usage
-      const useDocker = await confirm({
-        message: chalk.cyan('Do you want to use Docker?'),
-      });
-
       if (useDocker) {
-        // Docker setup
         setupDocker(targetPath, dbChoice, chalk);
       } else {
         console.log(chalk.yellow('Skipping Docker setup.'));
       }
 
-      // Update dependencies in package.json
-      const packageJsonPath = path.join(targetPath, 'package.json');
-      const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+      // Dependencies
+      setupDependencies(targetPath, ormChoice, dbChoice, chalk);
 
-      // Add or update dependencies
-      packageJson.dependencies = {
-        ...packageJson.dependencies,
-        ...dependencies
-      };
-
-      fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
-
-      // Conditional log based on target path
       if (projectName === '.' || projectName === './') {
-        console.log(chalk.yellow('Please run `npm install` to install the new dependencies.'));
+        console.log(chalk.yellow(`Please run ${chalk.bold('npm install')} in the current directory to install the new dependencies.`));
       } else {
-        console.log(chalk.yellow(`Please run ${chalk.bold('npm install')} in the ${chalk.bold(targetPath)} directory to install the new dependencies.`));
+        console.log(chalk.yellow(`Please run ${chalk.bold('npm install')} in the ${chalk.bold(projectName)} directory to install the new dependencies.`));
       }
     } else {
       console.log(chalk.yellow('Skipping database connection setup.'));
     }
   } catch (err) {
+    spinner.fail('Failed to create Kyrix app.');
     console.error(chalk.red('Failed to create Kyrix app: '), err);
   }
 })();

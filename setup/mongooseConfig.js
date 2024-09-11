@@ -1,7 +1,7 @@
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
 
-module.exports.setupMongoose = (targetPath, chalk) => {
+export const setupMongoose = (targetPath, chalk) => {
   const mongoosePath = path.join(targetPath, 'src', 'server');
   const mainPath = path.join(targetPath, 'src', 'server');
 

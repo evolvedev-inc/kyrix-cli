@@ -1,7 +1,8 @@
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
 
-module.exports.setupPrisma = (targetPath, chalk) => {
+// Configuration functions
+export const setupPrisma = (targetPath, chalk, db) => {
   const prismaPath = path.join(targetPath, 'prisma');
   const connectDBPath = path.join(targetPath, 'src', 'server');
   const trpcPath = path.join(targetPath, 'src', 'server', 'trpc');
@@ -24,10 +25,13 @@ module.exports.setupPrisma = (targetPath, chalk) => {
     fs.mkdirSync(mainPath, { recursive: true });
   }
 
+  // Database provider based on the selected DB
+  const provider = db === 'postgresql' ? 'postgresql' : 'mysql';
+
   // Write Prisma schema file
   fs.writeFileSync(path.join(prismaPath, 'schema.prisma'), `
     datasource db {
-      provider = "postgresql"
+      provider = "${provider}"
       url      = env("DATABASE_URL")
     }
 
@@ -175,5 +179,9 @@ module.exports.setupPrisma = (targetPath, chalk) => {
       });
   `);
 
-  console.log(chalk.green('PostgreSQL+Prisma setup completed.'));
+  if (provider === 'postgresql') {
+    console.log(chalk.green('PostgreSQL+Prisma setup completed.'));
+  } else {
+    console.log(chalk.green('MySQL+Prisma setup completed.'));
+  }
 };
