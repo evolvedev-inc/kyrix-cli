@@ -1,6 +1,6 @@
 {
   "name": "create-kyrix-app",
-  "version": "1.4.4",
+  "version": "1.5.1",
   "description": "A CLI tool to create a Kyrix app.",
   "main": "index.js",
   "bin": {

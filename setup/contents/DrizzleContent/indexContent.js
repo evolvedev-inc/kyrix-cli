@@ -12,3 +12,18 @@ const connection = await ${provider}.createConnection({
 
 export const db = drizzle(connection, { schema, mode: 'default' });
 `;
+
+export const indexContentPostgreSQL = `
+import { drizzle } from 'drizzle-orm/postgres-js';
+import postgres from 'postgres';
+import * as schema from '../db/schema';
+
+const connection = postgres({
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  database: process.env.DB_NAME,
+  password: process.env.DB_PASSWORD,
+});
+
+export const db = drizzle(connection, { schema });
+`;

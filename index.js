@@ -71,15 +71,13 @@ import { setupDependencies } from "./setup/dependencies/config.js";
 
     // For PostgreSQL and MySQL, ask if the user wants an ORM
     if (dbChoice === "postgresql" || dbChoice === "mysql") {
-      if (useOrm) {
-        ormChoice = await select({
-          message: chalk.cyan(`Choose an ORM for ${dbChoice}:`),
-          options: [
-            { label: chalk.bold.magenta("1. Prisma"), value: "prisma" },
-            { label: chalk.bold.magenta("2. Drizzle"), value: "drizzle" },
-          ],
-        });
-      }
+      ormChoice = await select({
+        message: chalk.cyan(`Choose an ORM for ${dbChoice}:`),
+        options: [
+          { label: chalk.bold.magenta("1. Prisma"), value: "prisma" },
+          { label: chalk.bold.magenta("2. Drizzle"), value: "drizzle" },
+        ],
+      });
     }
   }
 

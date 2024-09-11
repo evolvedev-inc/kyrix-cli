@@ -2,12 +2,18 @@ import fs from "fs";
 import path from "path";
 import { drizzleConfigContent } from "./contents/DrizzleContent/drizzleConfigContent.js";
 import { mainContent } from "./contents/DrizzleContent/mainContent.js";
-import { indexContent } from "./contents/DrizzleContent/indexContent.js";
+import {
+  indexContent,
+  indexContentPostgreSQL,
+} from "./contents/DrizzleContent/indexContent.js";
 import {
   schemaContentMySQL,
   schemaContentPostgreSQL,
 } from "./contents/DrizzleContent/schemaContent.js";
-import { trpcContentMySQL } from "./contents/DrizzleContent/trpcContent.js";
+import {
+  trpcContentMySQL,
+  trpcContentPostgreSQL,
+} from "./contents/DrizzleContent/trpcContent.js";
 
 export const setupDrizzle = (targetPath, chalk, db) => {
   // Paths for the configuration files and folders
@@ -30,7 +36,11 @@ export const setupDrizzle = (targetPath, chalk, db) => {
   fs.writeFileSync(drizzleConfigPath, drizzleConfigContent(provider));
 
   // Write index.ts file
-  fs.writeFileSync(indexPath, indexContent(provider));
+  if (provider === "mysql") {
+    fs.writeFileSync(indexPath, indexContent(provider));
+  } else if (provider === "postgresql") {
+    fs.writeFileSync(indexPath, indexContentPostgreSQL);
+  }
 
   // Write schema.ts file with dynamic content based on the selected database
   let schemaContent;
@@ -50,7 +60,7 @@ export const setupDrizzle = (targetPath, chalk, db) => {
   if (provider === "mysql") {
     trpcContent = trpcContentMySQL;
   } else if (provider === "postgresql") {
-    // Add PostgreSQL-specific trpcContent here
+    trpcContent = trpcContentPostgreSQL;
   } else {
     throw new Error("Error when creating Drizzle configuration.");
   }
