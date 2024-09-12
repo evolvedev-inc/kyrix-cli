@@ -3,9 +3,9 @@
 import simpleGit from "simple-git";
 import path from "path";
 import fs from "fs";
-import { confirm, select, intro } from "@clack/prompts";
+import { confirm, select, isCancel } from "@clack/prompts";
 import ora from "ora"; // Import ora for spinner
-import chalk from "chalk"; // Dynamically import chalk (ESM)
+import chalk from "chalk";
 
 // Import configuration files
 import { setupPrisma } from "./setup/prismaConfig.js";
@@ -13,6 +13,9 @@ import { setupDrizzle } from "./setup/drizzleConfig.js";
 import { setupMongoose } from "./setup/mongooseConfig.js";
 import { setupDocker } from "./setup/dockerConfig.js";
 import { setupDependencies } from "./setup/dependencies/config.js";
+import { checkPackageManagers } from "./scripts/managerFinder.js";
+import { intro } from "./utils/customIntro.js";
+import { cleanUpOnExit } from "./utils/exitProcess.js";
 
 // Get project name from command-line arguments
 const args = process.argv.slice(2); // Skip "node" and script name
@@ -22,18 +25,8 @@ const projectName = args[0] || "kyrix-app"; // Default to "kyrix-app" if no name
   // Define the Kyrix repo URL
   const repoUrl = "https://github.com/evolvedev-inc/kyrix.git";
 
-  // Display an intro message using Clack
-  intro("Welcome to Kyrix App Setup");
-
-  // Prompt for package manager selection
-  const packageManager = await select({
-    message: "Choose your package manager:",
-    options: [
-      { label: "npm", value: "npm" },
-      { label: "pnpm", value: "pnpm" },
-      { label: "yarn", value: "yarn" },
-    ],
-  });
+  // Check for available package managers
+  const availableManagers = checkPackageManagers();
 
   // Determine the target directory
   let targetPath;
@@ -57,43 +50,111 @@ const projectName = args[0] || "kyrix-app"; // Default to "kyrix-app" if no name
       process.exit(1);
     }
   }
+  // Display an custom intro message using Clack
+  intro("Welcome to Kyrix App Setup");
+
+  // Prompt user for package manager selection
+  let packageManagerChoice;
+  try {
+    packageManagerChoice = await select({
+      message: "Choose your package manager:",
+      options: availableManagers.map((manager) => ({
+        label: manager,
+        value: manager,
+      })),
+    });
+
+    if (isCancel(packageManagerChoice)) {
+      console.log("Operation cancelled by user.");
+      cleanUpOnExit(targetPath);
+      process.exit(0);
+    }
+  } catch (err) {
+    console.error(chalk.red("Prompt error: "), err);
+    cleanUpOnExit(targetPath);
+    process.exit(1);
+  }
 
   // Prompt if the user wants to connect a database
-  const connectDb = await confirm({
-    message: chalk.cyan(
-      "Do you want to connect the Kyrix app with a database?"
-    ),
-  });
+  let connectDb;
+  try {
+    connectDb = await confirm({
+      message: chalk.cyan(
+        "Do you want to connect the Kyrix app with a database?"
+      ),
+    });
+
+    if (isCancel(connectDb)) {
+      console.log("Operation cancelled by user.");
+      cleanUpOnExit(targetPath);
+      process.exit(0);
+    }
+  } catch (err) {
+    console.error(chalk.red("Prompt error: "), err);
+    cleanUpOnExit(targetPath);
+    process.exit(1);
+  }
 
   let dbChoice, ormChoice;
 
   if (connectDb) {
     // Ask for database selection
-    dbChoice = await select({
-      message: chalk.cyan("Choose your database connection:"),
-      options: [
-        { label: chalk.bold.magenta("1. PostgreSQL"), value: "postgresql" },
-        { label: chalk.bold.magenta("2. MySQL"), value: "mysql" },
-        { label: chalk.bold.magenta("3. MongoDB"), value: "mongodb" },
-      ],
-    });
-
-    // For PostgreSQL and MySQL, ask if the user wants an ORM
-    if (dbChoice === "postgresql" || dbChoice === "mysql") {
-      ormChoice = await select({
-        message: chalk.cyan(`Choose an ORM for ${dbChoice}:`),
+    try {
+      dbChoice = await select({
+        message: chalk.cyan("Choose your database connection:"),
         options: [
-          { label: chalk.bold.magenta("1. Prisma"), value: "prisma" },
-          { label: chalk.bold.magenta("2. Drizzle"), value: "drizzle" },
+          { label: chalk.bold.magenta("1. PostgreSQL"), value: "postgresql" },
+          { label: chalk.bold.magenta("2. MySQL"), value: "mysql" },
+          { label: chalk.bold.magenta("3. MongoDB"), value: "mongodb" },
         ],
       });
+
+      if (isCancel(dbChoice)) {
+        console.log("Operation cancelled by user.");
+        cleanUpOnExit(targetPath);
+        process.exit(0);
+      }
+
+      // For PostgreSQL and MySQL, ask if the user wants an ORM
+      if (dbChoice === "postgresql" || dbChoice === "mysql") {
+        ormChoice = await select({
+          message: chalk.cyan(`Choose an ORM for ${dbChoice}:`),
+          options: [
+            { label: chalk.bold.magenta("1. Prisma"), value: "prisma" },
+            { label: chalk.bold.magenta("2. Drizzle"), value: "drizzle" },
+          ],
+        });
+
+        if (isCancel(ormChoice)) {
+          console.log("Operation cancelled by user.");
+          cleanUpOnExit(targetPath);
+          process.exit(0);
+        }
+      }
+    } catch (err) {
+      console.error(chalk.red("Prompt error: "), err);
+      cleanUpOnExit(targetPath);
+      process.exit(1);
     }
   }
 
   // Ask if the user wants to use Docker
-  const useDocker = await confirm({
-    message: chalk.cyan("Do you want to use Docker?"),
-  });
+  let useDocker;
+  try {
+    useDocker = await confirm({
+      message: chalk.cyan("Do you want to use Docker?"),
+    });
+
+    if (isCancel(useDocker)) {
+      console.log("Operation cancelled by user.");
+      cleanUpOnExit(targetPath);
+      process.exit(0);
+    }
+  } catch (err) {
+    console.error(chalk.red("Prompt error: "), err);
+    cleanUpOnExit(targetPath);
+    process.exit(1);
+  }
 
   // Set up spinner for cloning
   const spinner = ora({
@@ -142,32 +203,37 @@ const projectName = args[0] || "kyrix-app"; // Default to "kyrix-app" if no name
 
       if (useDocker) {
         setupDocker(targetPath, dbChoice, chalk);
-      } else {
-        console.log(chalk.yellow("Skipping Docker setup."));
       }
 
       // Dependencies
       setupDependencies(targetPath, ormChoice, dbChoice, chalk);
 
-      const installCommand = `${packageManager} install`;
+      // Dynamic install command
+      const installCommand = {
+        npm: "npm install",
+        pnpm: "pnpm install",
+        yarn: "yarn install",
+        bun: "bun add",
+      }[packageManagerChoice];
+
       if (projectName === "." || projectName === "./") {
         console.log(
-          chalk.bold.yellow(
-            `Please run ${installCommand} in the current directory to install the new dependencies.`
+          chalk.bgMagenta.bold.white(
+            `Run ${installCommand} in the current directory to install the new dependencies.`
           )
         );
       } else {
         console.log(
-          chalk.bold.yellow(
-            `Please run ${installCommand} in ${projectName} directory to install the new dependencies.`
+          chalk.bgCyan.bold.white(
+            `Run ${installCommand} in the ${projectName} directory to install the new dependencies.`
           )
         );
       }
-    } else {
-      console.log(chalk.yellow("Skipping database connection setup."));
     }
   } catch (err) {
     spinner.fail("Failed to create Kyrix app.");
     console.error(chalk.red("Failed to create Kyrix app: "), err);
+    cleanUpOnExit(targetPath); // Cleanup on error
+    process.exit(1);
   }
 })();
