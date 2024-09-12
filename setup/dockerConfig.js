@@ -1,8 +1,8 @@
-import fs from 'fs';
-import path from 'path';
+import fs from "fs";
+import path from "path";
 
 export const setupDocker = (targetPath, dbChoice, chalk) => {
-  const dockerPath = path.join(targetPath, 'src', 'docker');
+  const dockerPath = path.join(targetPath, "src", "docker");
 
   if (!fs.existsSync(dockerPath)) {
     fs.mkdirSync(dockerPath, { recursive: true });
@@ -10,7 +10,7 @@ export const setupDocker = (targetPath, dbChoice, chalk) => {
 
   let dockerComposeYml;
 
-  if (dbChoice === 'postgresql') {
+  if (dbChoice === "postgresql") {
     // PostgreSQL+Prisma Docker setup
     dockerComposeYml = `
       version: '3'
@@ -19,9 +19,9 @@ export const setupDocker = (targetPath, dbChoice, chalk) => {
           image: postgres:latest
           container_name: postgres
           environment:
-            POSTGRES_USER: ${process.env.POSTGRES_USER || 'user'}
-            POSTGRES_PASSWORD: ${process.env.POSTGRES_PASSWORD || 'password'}
-            POSTGRES_DB: ${process.env.POSTGRES_DB || 'mydb'}
+            POSTGRES_USER: ${process.env.POSTGRES_USER || "user"}
+            POSTGRES_PASSWORD: ${process.env.POSTGRES_PASSWORD || "password"}
+            POSTGRES_DB: ${process.env.POSTGRES_DB || "mydb"}
           ports:
             - "5432:5432"
           networks:
@@ -31,7 +31,7 @@ export const setupDocker = (targetPath, dbChoice, chalk) => {
         kyrix-network:
           driver: bridge
     `;
-  } else if (dbChoice === 'mongodb') {
+  } else if (dbChoice === "mongodb") {
     // MongoDB+Mongoose Docker setup
     dockerComposeYml = `
       version: '3'
@@ -40,8 +40,12 @@ export const setupDocker = (targetPath, dbChoice, chalk) => {
           image: mongo:latest
           container_name: mongo
           environment:
-            MONGO_INITDB_ROOT_USERNAME: ${process.env.MONGO_INITDB_ROOT_USERNAME || 'root'}
-            MONGO_INITDB_ROOT_PASSWORD: ${process.env.MONGO_INITDB_ROOT_PASSWORD || 'password'}
+            MONGO_INITDB_ROOT_USERNAME: ${
+              process.env.MONGO_INITDB_ROOT_USERNAME || "root"
+            }
+            MONGO_INITDB_ROOT_PASSWORD: ${
+              process.env.MONGO_INITDB_ROOT_PASSWORD || "password"
+            }
           ports:
             - "27017:27017"
           networks:
@@ -51,7 +55,7 @@ export const setupDocker = (targetPath, dbChoice, chalk) => {
         kyrix-network:
           driver: bridge
     `;
-  } else if (dbChoice === 'mysql') {
+  } else if (dbChoice === "mysql") {
     // MySQL Docker setup
     dockerComposeYml = `
       version: '3'
@@ -60,10 +64,10 @@ export const setupDocker = (targetPath, dbChoice, chalk) => {
           image: mysql:latest
           container_name: mysql
           environment:
-            MYSQL_ROOT_PASSWORD: ${process.env.MYSQL_ROOT_PASSWORD || 'root'}
-            MYSQL_DATABASE: ${process.env.MYSQL_DATABASE || 'mydb'}
-            MYSQL_USER: ${process.env.MYSQL_USER || 'user'}
-            MYSQL_PASSWORD: ${process.env.MYSQL_PASSWORD || 'password'}
+            MYSQL_ROOT_PASSWORD: ${process.env.MYSQL_ROOT_PASSWORD || "root"}
+            MYSQL_DATABASE: ${process.env.MYSQL_DATABASE || "mydb"}
+            MYSQL_USER: ${process.env.MYSQL_USER || "user"}
+            MYSQL_PASSWORD: ${process.env.MYSQL_PASSWORD || "password"}
           ports:
             - "3306:3306"
           networks:
@@ -75,7 +79,8 @@ export const setupDocker = (targetPath, dbChoice, chalk) => {
     `;
   }
 
-  fs.writeFileSync(path.join(dockerPath, 'docker-compose.yml'), dockerComposeYml);
-
-  console.log(chalk.green('Docker setup completed.'));
+  fs.writeFileSync(
+    path.join(dockerPath, "docker-compose.yml"),
+    dockerComposeYml
+  );
 };

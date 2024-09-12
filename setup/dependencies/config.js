@@ -71,6 +71,4 @@ export const setupDependencies = (targetPath, ormChoice, dbChoice, chalk) => {
   };
 
   fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
-
-  console.log(chalk.green("Dependencies updated successfully."));
 };

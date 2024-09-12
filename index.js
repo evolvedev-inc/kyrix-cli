@@ -3,7 +3,7 @@
 import simpleGit from "simple-git";
 import path from "path";
 import fs from "fs";
-import { confirm, select, text } from "@clack/prompts";
+import { confirm, select, intro } from "@clack/prompts";
 import ora from "ora"; // Import ora for spinner
 import chalk from "chalk"; // Dynamically import chalk (ESM)
 
@@ -14,17 +14,16 @@ import { setupMongoose } from "./setup/mongooseConfig.js";
 import { setupDocker } from "./setup/dockerConfig.js";
 import { setupDependencies } from "./setup/dependencies/config.js";
 
+// Get project name from command-line arguments
+const args = process.argv.slice(2); // Skip "node" and script name
+const projectName = args[0] || "kyrix-app"; // Default to "kyrix-app" if no name provided
+
 (async () => {
   // Define the Kyrix repo URL
   const repoUrl = "https://github.com/evolvedev-inc/kyrix.git";
 
-  // Prompt user for project directory
-  const projectName = await text({
-    message: chalk.cyan(
-      "What will be your project directory? (default: kyrix-app)"
-    ),
-    initialValue: "kyrix-app",
-  });
+  // Display an intro message using Clack
+  intro("Welcome to Kyrix App Setup");
 
   // Determine the target directory
   let targetPath;

@@ -29,12 +29,4 @@ export const setupPrisma = (targetPath, chalk, db) => {
   fs.writeFileSync(path.join(connectDBPath, "connect.db.ts"), dbContent);
   fs.writeFileSync(path.join(trpcPath, "trpc.ts"), trpcContent);
   fs.writeFileSync(path.join(mainPath, "main.ts"), mainContent);
-
-  console.log(
-    chalk.green(
-      `${
-        provider.charAt(0).toUpperCase() + provider.slice(1)
-      }+Prisma setup completed.`
-    )
-  );
 };

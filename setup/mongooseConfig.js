@@ -1,15 +1,17 @@
-import fs from 'fs';
-import path from 'path';
+import fs from "fs";
+import path from "path";
 
 export const setupMongoose = (targetPath, chalk) => {
-  const mongoosePath = path.join(targetPath, 'src', 'server');
-  const mainPath = path.join(targetPath, 'src', 'server');
+  const mongoosePath = path.join(targetPath, "src", "server");
+  const mainPath = path.join(targetPath, "src", "server");
 
   if (!fs.existsSync(mongoosePath)) {
     fs.mkdirSync(mongoosePath, { recursive: true });
   }
 
-  fs.writeFileSync(path.join(mongoosePath, 'connect.db.ts'), `
+  fs.writeFileSync(
+    path.join(mongoosePath, "connect.db.ts"),
+    `
     import mongoose from 'mongoose';
 
     const connectDB = async () => {
@@ -23,9 +25,12 @@ export const setupMongoose = (targetPath, chalk) => {
     };
 
     export default connectDB;
-  `);
+  `
+  );
 
-  fs.writeFileSync(path.join(mainPath, 'main.ts'), `
+  fs.writeFileSync(
+    path.join(mainPath, "main.ts"),
+    `
     import http from 'http';
     import type { ViteDevServer } from 'vite';
     import { createCallerFactory } from '@trpc/server';
@@ -95,7 +100,6 @@ export const setupMongoose = (targetPath, chalk) => {
       .listen(env.SERVER_PORT, 'localhost', () => {
         console.log(\`Server running on http://localhost:\${env.SERVER_PORT}\`);
       });
-  `);
-
-  console.log(chalk.green('MongoDB+Mongoose setup completed.'));
+  `
+  );
 };

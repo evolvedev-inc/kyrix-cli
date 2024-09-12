@@ -65,10 +65,4 @@ export const setupDrizzle = (targetPath, chalk, db) => {
     throw new Error("Error when creating Drizzle configuration.");
   }
   fs.writeFileSync(trpcPath, trpcContentMySQL);
-
-  if (provider === "postgresql") {
-    console.log(chalk.green("PostgreSQL+Drizzle setup completed."));
-  } else {
-    console.log(chalk.green("MySQL+Drizzle setup completed."));
-  }
 };
