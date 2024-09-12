@@ -25,6 +25,16 @@ const projectName = args[0] || "kyrix-app"; // Default to "kyrix-app" if no name
   // Display an intro message using Clack
   intro("Welcome to Kyrix App Setup");
 
+  // Prompt for package manager selection
+  const packageManager = await select({
+    message: "Choose your package manager:",
+    options: [
+      { label: "npm", value: "npm" },
+      { label: "pnpm", value: "pnpm" },
+      { label: "yarn", value: "yarn" },
+    ],
+  });
+
   // Determine the target directory
   let targetPath;
 
@@ -139,20 +149,17 @@ const projectName = args[0] || "kyrix-app"; // Default to "kyrix-app" if no name
       // Dependencies
       setupDependencies(targetPath, ormChoice, dbChoice, chalk);
 
+      const installCommand = `${packageManager} install`;
       if (projectName === "." || projectName === "./") {
         console.log(
-          chalk.yellow(
-            `Please run ${chalk.bold(
-              "npm install"
-            )} in the current directory to install the new dependencies.`
+          chalk.bold.yellow(
+            `Please run ${installCommand} in the current directory to install the new dependencies.`
           )
         );
       } else {
         console.log(
-          chalk.yellow(
-            `Please run ${chalk.bold("npm install")} in the ${chalk.bold(
-              projectName
-            )} directory to install the new dependencies.`
+          chalk.bold.yellow(
+            `Please run ${installCommand} in ${projectName} directory to install the new dependencies.`
           )
         );
       }
