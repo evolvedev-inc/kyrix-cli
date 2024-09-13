@@ -197,6 +197,13 @@ const projectName = args[0] || "kyrix-app"; // Default to "kyrix-app" if no name
       fs.rmSync(gitFolderPath, { recursive: true });
     }
 
+    if (packageManagerChoice !== "pnpm") {
+      const pnpmWorkspacePath = path.join(targetPath, "pnpm-workspace.yaml");
+      if (fs.existsSync(pnpmWorkspacePath)) {
+        fs.rmSync(pnpmWorkspacePath, { recursive: true });
+      }
+    }
+
     spinner.succeed(
       `Kyrix app created successfully ${
         projectName === "." || projectName === "./"
