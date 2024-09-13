@@ -17,6 +17,7 @@ import { checkPackageManagers } from "./scripts/managerFinder.js";
 import { intro } from "./utils/customIntro.js";
 import { cleanUpOnExit } from "./utils/exitProcess.js";
 import { setupTailwind } from "./setup/tailwindConfig.js";
+import { addTailwindDependencies } from "./setup/dependencies/addTailwindDependencies.js";
 
 // Get project name from command-line arguments
 const args = process.argv.slice(2); // Skip "node" and script name
@@ -207,6 +208,7 @@ const projectName = args[0] || "kyrix-app"; // Default to "kyrix-app" if no name
     // Now set up the tailwind css config
     if (tailwind) {
       setupTailwind(targetPath);
+      addTailwindDependencies(targetPath);
     }
 
     // Now set up the database connection based on user config
@@ -232,7 +234,7 @@ const projectName = args[0] || "kyrix-app"; // Default to "kyrix-app" if no name
       }
 
       // Dependencies
-      setupDependencies(targetPath, ormChoice, dbChoice, tailwind);
+      setupDependencies(targetPath, ormChoice, dbChoice);
 
       // Dynamic install command
       const installCommand = {

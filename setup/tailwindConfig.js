@@ -2,8 +2,7 @@ import fs from "fs";
 import path from "path";
 import { configContent } from "./contents/TailwindContent/config.js";
 import { postcssContent } from "./contents/TailwindContent/postcss.js";
-import { tsconfigNodeContent } from "./contents/TailwindContent/tsconfigNode.js";
-import { viteConfigContent } from "./contents/TailwindContent/viteConfig.js";
+import { tsconfigAppContent } from "./contents/TailwindContent/tsconfigApp.js";
 import { globalcssContent } from "./contents/TailwindContent/globalcss.js";
 import { formatWithPrettier } from "../utils/formatter.js";
 
@@ -19,13 +18,9 @@ export const setupTailwind = async (targetPath) => {
     path.join(targetPath, "postcss.config.ts"),
     postcssContent
   );
-  const formattedViteConfigContent = await formatWithPrettier(
-    path.join(targetPath, "vite.config.ts"),
-    viteConfigContent
-  );
   const formattedtsConfigNodeContent = await formatWithPrettier(
-    path.join(targetPath, "tsconfig.node.json"),
-    tsconfigNodeContent
+    path.join(targetPath, "tsconfig.app.json"),
+    tsconfigAppContent
   );
 
   const formattedGlobalcssContent = await formatWithPrettier(
@@ -43,11 +38,7 @@ export const setupTailwind = async (targetPath) => {
     formattedPostcssContent
   );
   fs.writeFileSync(
-    path.join(targetPath, "vite.config.ts"),
-    formattedViteConfigContent
-  );
-  fs.writeFileSync(
-    path.join(targetPath, "tsconfig.node.json"),
+    path.join(targetPath, "tsconfig.app.json"),
     formattedtsConfigNodeContent
   );
   fs.writeFileSync(

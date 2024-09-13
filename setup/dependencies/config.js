@@ -1,12 +1,7 @@
 import fs from "fs";
 import path from "path";
 
-export const setupDependencies = (
-  targetPath,
-  ormChoice,
-  dbChoice,
-  tailwind
-) => {
+export const setupDependencies = (targetPath, ormChoice, dbChoice) => {
   let dependencies = {};
   let devDependencies = {};
   let scripts = {};
@@ -55,21 +50,16 @@ export const setupDependencies = (
     };
   }
 
-  // Add Tailwind CSS dependencies if `tailwind` is true
-  if (tailwind) {
-    dependencies = {
-      ...dependencies,
-      tailwindcss: "^3.4.11",
-      postcss: "^8.4.45",
-      autoprefixer: "^10.4.20",
-    };
-  }
-
-  // Update dependencies in package.json
+  // Read the existing package.json
   const packageJsonPath = path.join(targetPath, "package.json");
   const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
 
-  // Add or update dependencies and devDependencies
+  // Ensure devDependencies is not undefined in package.json
+  if (!packageJson.devDependencies) {
+    packageJson.devDependencies = {};
+  }
+
+  // Merge ORM-related dependencies into the package.json
   packageJson.dependencies = {
     ...packageJson.dependencies,
     ...dependencies,
@@ -85,5 +75,6 @@ export const setupDependencies = (
     ...scripts,
   };
 
+  // Write the updated package.json back to disk
   fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
 };
