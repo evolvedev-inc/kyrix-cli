@@ -22,8 +22,11 @@
   "dependencies": {
     "@clack/prompts": "^0.7.0",
     "chalk": "^4.1.2",
-    "node-emoji": "^2.1.3",
     "ora": "^8.1.0",
     "simple-git": "^3.26.0"
+  },
+  "devDependencies": {
+    "prettier": "^3.3.3",
+    "prisma": "^5.19.1"
   }
 }

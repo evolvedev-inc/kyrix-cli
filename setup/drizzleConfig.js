@@ -14,8 +14,9 @@ import {
   trpcContentMySQL,
   trpcContentPostgreSQL,
 } from "./contents/DrizzleContent/trpcContent.js";
+import { formatWithPrettier } from "../utils/formatter.js"; // Import your formatter function
 
-export const setupDrizzle = (targetPath, chalk, db) => {
+export const setupDrizzle = async (targetPath, chalk, db) => {
   // Paths for the configuration files and folders
   const drizzleConfigPath = path.join(targetPath, "drizzle.config.ts");
   const dbFolderPath = path.join(targetPath, "src", "server", "db");
@@ -32,37 +33,36 @@ export const setupDrizzle = (targetPath, chalk, db) => {
   // Database provider based on the selected DB
   const provider = db === "postgresql" ? "postgresql" : "mysql";
 
-  // Write Drizzle configuration file
-  fs.writeFileSync(drizzleConfigPath, drizzleConfigContent(provider));
+  // Format and write Drizzle configuration file
+  const formattedDrizzleConfigContent = await formatWithPrettier(
+    drizzleConfigPath,
+    drizzleConfigContent(provider)
+  );
+  fs.writeFileSync(drizzleConfigPath, formattedDrizzleConfigContent);
 
-  // Write index.ts file
-  if (provider === "mysql") {
-    fs.writeFileSync(indexPath, indexContent(provider));
-  } else if (provider === "postgresql") {
-    fs.writeFileSync(indexPath, indexContentPostgreSQL);
-  }
+  // Format and write index.ts file
+  const formattedIndexContent =
+    provider === "mysql"
+      ? await formatWithPrettier(indexPath, indexContent(provider))
+      : await formatWithPrettier(indexPath, indexContentPostgreSQL);
+  fs.writeFileSync(indexPath, formattedIndexContent);
 
-  // Write schema.ts file with dynamic content based on the selected database
-  let schemaContent;
-  if (provider === "postgresql") {
-    schemaContent = schemaContentPostgreSQL;
-  } else if (provider === "mysql") {
-    schemaContent = schemaContentMySQL;
-  } else {
-    throw new Error("Unsupported database type for Drizzle configuration.");
-  }
-  fs.writeFileSync(schemaPath, schemaContent);
+  // Format and write schema.ts file
+  const schemaContent =
+    provider === "postgresql" ? schemaContentPostgreSQL : schemaContentMySQL;
+  const formattedSchemaContent = await formatWithPrettier(
+    schemaPath,
+    schemaContent
+  );
+  fs.writeFileSync(schemaPath, formattedSchemaContent);
 
-  // Write src/server/main.ts file with dynamic content based on the selected database
-  fs.writeFileSync(mainPath, mainContent);
+  // Format and write src/server/main.ts file
+  const formattedMainContent = await formatWithPrettier(mainPath, mainContent);
+  fs.writeFileSync(mainPath, formattedMainContent);
 
-  let trpcContent;
-  if (provider === "mysql") {
-    trpcContent = trpcContentMySQL;
-  } else if (provider === "postgresql") {
-    trpcContent = trpcContentPostgreSQL;
-  } else {
-    throw new Error("Error when creating Drizzle configuration.");
-  }
-  fs.writeFileSync(trpcPath, trpcContentMySQL);
+  // Format and write trpc.ts file
+  const trpcContent =
+    provider === "mysql" ? trpcContentMySQL : trpcContentPostgreSQL;
+  const formattedTrpcContent = await formatWithPrettier(trpcPath, trpcContent);
+  fs.writeFileSync(trpcPath, formattedTrpcContent);
 };

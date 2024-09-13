@@ -4,8 +4,9 @@ import { schemaContent } from "./contents/PrismaContent/SchemaContent.js";
 import { dbContent } from "./contents/PrismaContent/DBContent.js";
 import { trpcContent } from "./contents/PrismaContent/TRPCContent.js";
 import { mainContent } from "./contents/PrismaContent/MainContent.js";
+import { formatWithPrettier } from "../utils/formatter.js";
 
-export const setupPrisma = (targetPath, chalk, db) => {
+export const setupPrisma = async (targetPath, chalk, db) => {
   const prismaPath = path.join(targetPath, "prisma");
   const connectDBPath = path.join(targetPath, "src", "server");
   const trpcPath = path.join(targetPath, "src", "server", "trpc");
@@ -21,12 +22,33 @@ export const setupPrisma = (targetPath, chalk, db) => {
   // Database provider
   const provider = db === "postgresql" ? "postgresql" : "mysql";
 
-  // Write files
-  fs.writeFileSync(
+  // Format the content before writing it to the file
+  const formattedSchemaContent = await formatWithPrettier(
     path.join(prismaPath, "schema.prisma"),
     schemaContent(provider)
   );
-  fs.writeFileSync(path.join(connectDBPath, "connect.db.ts"), dbContent);
-  fs.writeFileSync(path.join(trpcPath, "trpc.ts"), trpcContent);
-  fs.writeFileSync(path.join(mainPath, "main.ts"), mainContent);
+  const formattedDBContent = await formatWithPrettier(
+    path.join(connectDBPath, "connect.db.ts"),
+    dbContent
+  );
+  const formattedtrpcContent = await formatWithPrettier(
+    path.join(trpcPath, "trpc.ts"),
+    trpcContent
+  );
+  const formattedMainContent = await formatWithPrettier(
+    path.join(mainPath, "main.ts"),
+    mainContent
+  );
+
+  // Write files
+  fs.writeFileSync(
+    path.join(prismaPath, "schema.prisma"),
+    formattedSchemaContent
+  );
+  fs.writeFileSync(
+    path.join(connectDBPath, "connect.db.ts"),
+    formattedDBContent
+  );
+  fs.writeFileSync(path.join(trpcPath, "trpc.ts"), formattedtrpcContent);
+  fs.writeFileSync(path.join(mainPath, "main.ts"), formattedMainContent);
 };

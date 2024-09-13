@@ -1,7 +1,8 @@
 import fs from "fs";
 import path from "path";
+import { formatYAML } from "../utils/formatter.js";
 
-export const setupDocker = (targetPath, dbChoice, chalk) => {
+export const setupDocker = async (targetPath, dbChoice, chalk) => {
   const dockerPath = path.join(targetPath, "src", "docker");
 
   if (!fs.existsSync(dockerPath)) {
@@ -79,8 +80,14 @@ export const setupDocker = (targetPath, dbChoice, chalk) => {
     `;
   }
 
-  fs.writeFileSync(
+  // Format the Docker Compose content
+  const formattedDockerCompose = await formatYAML(
     path.join(dockerPath, "docker-compose.yml"),
     dockerComposeYml
+  );
+
+  fs.writeFileSync(
+    path.join(dockerPath, "docker-compose.yml"),
+    formattedDockerCompose
   );
 };
