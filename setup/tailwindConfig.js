@@ -15,7 +15,7 @@ export const setupTailwind = async (targetPath) => {
     configContent
   );
   const formattedPostcssContent = await formatWithPrettier(
-    path.join(targetPath, "postcss.config.ts"),
+    path.join(targetPath, "postcss.config.js"),
     postcssContent
   );
   const formattedtsConfigNodeContent = await formatWithPrettier(
@@ -34,7 +34,7 @@ export const setupTailwind = async (targetPath) => {
     formattedConfigContent
   );
   fs.writeFileSync(
-    path.join(targetPath, "postcss.config.ts"),
+    path.join(targetPath, "postcss.config.js"),
     formattedPostcssContent
   );
   fs.writeFileSync(
