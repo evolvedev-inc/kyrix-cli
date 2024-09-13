@@ -1,7 +1,12 @@
 import fs from "fs";
 import path from "path";
 
-export const setupDependencies = (targetPath, ormChoice, dbChoice, chalk) => {
+export const setupDependencies = (
+  targetPath,
+  ormChoice,
+  dbChoice,
+  tailwind
+) => {
   let dependencies = {};
   let devDependencies = {};
   let scripts = {};
@@ -47,6 +52,16 @@ export const setupDependencies = (targetPath, ormChoice, dbChoice, chalk) => {
     // MongoDB setup, default to Mongoose
     dependencies = {
       mongoose: "^7.0.0",
+    };
+  }
+
+  // Add Tailwind CSS dependencies if `tailwind` is true
+  if (tailwind) {
+    dependencies = {
+      ...dependencies,
+      tailwindcss: "^3.4.11",
+      postcss: "^8.4.45",
+      autoprefixer: "^10.4.20",
     };
   }
 

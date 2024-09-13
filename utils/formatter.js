@@ -39,6 +39,10 @@ export const formatWithPrettier = async (filePath, content) => {
       parser = "typescript";
     } else if (filePath.endsWith(".js")) {
       parser = "babel";
+    } else if (filePath.endsWith(".css")) {
+      parser = "css";
+    } else if (filePath.endsWith(".json")) {
+      parser = "json";
     } else {
       throw new Error(`Unsupported file extension for file: ${filePath}`);
     }

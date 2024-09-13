@@ -16,6 +16,7 @@ import { setupDependencies } from "./setup/dependencies/config.js";
 import { checkPackageManagers } from "./scripts/managerFinder.js";
 import { intro } from "./utils/customIntro.js";
 import { cleanUpOnExit } from "./utils/exitProcess.js";
+import { setupTailwind } from "./setup/tailwindConfig.js";
 
 // Get project name from command-line arguments
 const args = process.argv.slice(2); // Skip "node" and script name
@@ -65,6 +66,26 @@ const projectName = args[0] || "kyrix-app"; // Default to "kyrix-app" if no name
     });
 
     if (isCancel(packageManagerChoice)) {
+      console.log("Operation cancelled by user.");
+      cleanUpOnExit(targetPath);
+      process.exit(0);
+    }
+  } catch (err) {
+    console.error(chalk.red("Prompt error: "), err);
+    cleanUpOnExit(targetPath);
+    process.exit(1);
+  }
+
+  // Prompt if the user wants to tailwind config
+  let tailwind;
+  try {
+    tailwind = await confirm({
+      message: chalk.cyan(
+        "Do you want to include Tailwind CSS in your project?"
+      ),
+    });
+
+    if (isCancel(tailwind)) {
       console.log("Operation cancelled by user.");
       cleanUpOnExit(targetPath);
       process.exit(0);
@@ -183,6 +204,11 @@ const projectName = args[0] || "kyrix-app"; // Default to "kyrix-app" if no name
       }`
     );
 
+    // Now set up the tailwind css config
+    if (tailwind) {
+      setupTailwind(targetPath);
+    }
+
     // Now set up the database connection based on user config
     if (connectDb) {
       if (dbChoice === "postgresql") {
@@ -206,7 +232,7 @@ const projectName = args[0] || "kyrix-app"; // Default to "kyrix-app" if no name
       }
 
       // Dependencies
-      setupDependencies(targetPath, ormChoice, dbChoice, chalk);
+      setupDependencies(targetPath, ormChoice, dbChoice, tailwind);
 
       // Dynamic install command
       const installCommand = {
