@@ -1,5 +1,4 @@
 import chalk from "chalk";
-import ora from "ora"; // Import ora for spinner
 import * as emoji from "node-emoji"; // Import node-emoji for emojis
 
 export const intro = (message) => {
