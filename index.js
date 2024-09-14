@@ -18,6 +18,7 @@ import { intro } from "./utils/customIntro.js";
 import { cleanUpOnExit } from "./utils/exitProcess.js";
 import { setupTailwind } from "./setup/tailwindConfig.js";
 import { addTailwindDependencies } from "./setup/dependencies/addTailwindDependencies.js";
+import { setUpKyrix } from "./setup/dependencies/kyrixDependencies.js";
 
 // Get project name from command-line arguments
 const args = process.argv.slice(2); // Skip "node" and script name
@@ -211,7 +212,7 @@ const projectName = args[0] || "kyrix-app"; // Default to "kyrix-app" if no name
           : `in ${chalk.green(projectName)}!`
       }`
     );
-
+    await setUpKyrix(targetPath, packageManagerChoice);
     // Now set up the tailwind css config
     if (tailwind) {
       setupTailwind(targetPath);
