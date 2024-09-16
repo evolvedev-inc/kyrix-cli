@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import simpleGit from "simple-git";
+import degit from "degit";
 import path from "path";
 import fs from "fs";
 import { confirm, select, isCancel } from "@clack/prompts";
@@ -26,7 +26,7 @@ const projectName = args[0] || "kyrix-app"; // Default to "kyrix-app" if no name
 
 (async () => {
   // Define the Kyrix repo URL
-  const repoUrl = "https://github.com/evolvedev-inc/kyrix.git";
+  const repoUrl = "https://github.com/evolvedev-inc/kyrix/templates/kyrix-react-router";
 
   // Check for available package managers
   const availableManagers = checkPackageManagers();
@@ -188,9 +188,17 @@ const projectName = args[0] || "kyrix-app"; // Default to "kyrix-app" if no name
     color: "cyan",
   }).start();
 
+
+  // repo config
+  const emitter = degit(repoUrl, {
+    cache: false,
+    force: true,
+    verbose: true,
+  });
+
   try {
     // Perform the Git clone operation
-    await simpleGit().clone(repoUrl, targetPath);
+    await emitter.clone(path.resolve(targetPath));
 
     // Remove the .git folder if it exists
     const gitFolderPath = path.join(targetPath, ".git");
